@@ -19,9 +19,9 @@ plistFile = File.join(ENV['BUILT_PRODUCTS_DIR'], ENV['INFOPLIST_PATH'])
 # Convert the binary plist to xml based
 `/usr/bin/plutil -convert xml1 #{plistFile}`
 
-# Open Info.plist and set the CFBundleVersion value to the revision hash
+# Open Info.plist and set the CFBundleVersion value to the "CFBuildVersion (revision hash)" format
 lines = IO.readlines(plistFile).join
-lines.gsub! /(<key>CFBundleVersion<\/key>\n\t<string>).*?(<\/string>)/, "\\1#{revision}\\2"
+lines.gsub! /(<key>CFBundleVersion<\/key>\n\t<string>)(\d+\.\d+)(<\/string>)/, "\\1\\2 (#{revision})\\3"
  
 # Overwrite the original Info.plist file with our updated version
 File.open(plistFile, 'w') {|f| f.puts lines}
