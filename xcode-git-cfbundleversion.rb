@@ -1,35 +1,36 @@
 #!/usr/bin/ruby
 # xcode-git-cfbundleversion.rb
 # Update CFBundleVersion in Info.plist file with short Git revision string
-# http://github.com/digdog/xcode-git-cfbundleversion/
+# http://github.com/jkohl/xcode-git-cfbundleversion/
 #
 # This is based on
+# http://github.com/digdog/xcode-git-cfbundleversion/
 # http://github.com/jsallis/xcode-git-versioner
 # http://github.com/juretta/iphone-project-tools/tree/v1.0.3
 
-# Fail if not run from Xcode
-raise "Must be run from Xcode's Run Script Build Phase" unless ENV['XCODE_VERSION_ACTUAL']
+require 'rubygems'
+begin
+  require 'Plist'
+rescue LoadError => e
+  puts "You need to install the 'Plist' gem: [sudo] gem install plist"
+  exit 1
+end
 
-# Get the current git revision hash
-revision = `/opt/local/bin/git rev-parse --short HEAD`.chomp!
+raise "Must be run from Xcode" unless ENV['XCODE_VERSION_ACTUAL']
 
-if (revision)
-    # Update Info.plist file
-    plistFile = "#{ENV['BUILT_PRODUCTS_DIR']}/#{ENV['INFOPLIST_PATH']}"
+GIT="/usr/local/git/bin/git"
+PLUTIL = "/usr/bin/plutil"
+PLIST_FILE = File.join(ENV['BUILT_PRODUCTS_DIR'], ENV['INFOPLIST_PATH'])
+REVISION = `#{GIT} rev-parse --short HEAD`.chomp!
 
-    # Convert the binary plist to xml based
-    `/usr/bin/plutil -convert xml1 #{plistFile}`
-
-    # Open Info.plist and set the CFBundleVersion value to the "CFBuildVersion (revision hash)" format
-    lines = IO.readlines(plistFile).join
-    lines.gsub!(/(<key>CFBundleVersion<\/key>\n\t<string>)(\d+\.\d+)(<\/string>)/, "\\1\\2 (#{revision})\\3")
-
-    # Overwrite the original Info.plist file with our updated version
-    File.open(plistFile, 'w') {|f| f.puts lines}
-
-    # Convert back to binary plist
-    `/usr/bin/plutil -convert binary1 #{plistFile}`
-
-    # Report to the user
-    puts "CFBundleVersion has revision number #{revision} in #{plistFile}"
+if File.file?(PLIST_FILE) and REVISION
+   `#{PLUTIL} -convert xml1 #{PLIST_FILE}`
+   
+  pl = Plist::parse_xml(PLIST_FILE)
+  if pl
+    pl["CFBundleVersion"] = REVISION.to_s
+    pl.save_plist(PLIST_FILE)
+  end
+  
+  `#{PLUTIL} -convert binary1 #{PLIST_FILE}`
 end
