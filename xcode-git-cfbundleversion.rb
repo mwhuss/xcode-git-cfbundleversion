@@ -18,13 +18,11 @@ end
 
 raise "Must be run from Xcode" unless ENV['XCODE_VERSION_ACTUAL']
 
-GIT="/opt/local/bin/git"
-PLUTIL = "/usr/bin/plutil"
 PLIST_FILE = File.join(ENV['BUILT_PRODUCTS_DIR'], ENV['INFOPLIST_PATH'])
-REVISION = `#{GIT} log --pretty=format:'' | wc -l`.scan(/\d/).to_s
+REVISION = `git log --pretty=format:'' | wc -l`.scan(/\d/).to_s
 
 if File.file?(PLIST_FILE) and REVISION
-  `#{PLUTIL} -convert xml1 #{PLIST_FILE}`
+  `plutil -convert xml1 #{PLIST_FILE}`
   
   pl = Plist::parse_xml(PLIST_FILE)
   if pl
@@ -32,7 +30,7 @@ if File.file?(PLIST_FILE) and REVISION
     pl.save_plist(PLIST_FILE)
   end
   
-  `#{PLUTIL} -convert binary1 #{PLIST_FILE}`
+  `plutil -convert binary1 #{PLIST_FILE}`
   
   puts "updated CFBundleVersion to #{REVISION}"
 end
