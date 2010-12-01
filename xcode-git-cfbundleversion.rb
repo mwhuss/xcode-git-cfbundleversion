@@ -1,7 +1,7 @@
 #!/usr/bin/ruby
 # xcode-git-cfbundleversion.rb
 # Update CFBundleVersion in Info.plist file with short Git revision string
-# http://github.com/jkohl/xcode-git-cfbundleversion/
+# http://github.com/guicocoa/xcode-git-cfbundleversion/
 #
 # This is based on
 # http://github.com/digdog/xcode-git-cfbundleversion/
@@ -18,14 +18,16 @@ end
 
 raise "Must be run from Xcode" unless ENV['XCODE_VERSION_ACTUAL']
 
-GIT="/usr/local/git/bin/git"
+GIT="/opt/local/bin/git"
 PLUTIL = "/usr/bin/plutil"
 PLIST_FILE = File.join(ENV['BUILT_PRODUCTS_DIR'], ENV['INFOPLIST_PATH'])
-REVISION = `#{GIT} rev-parse --short HEAD`.chomp!
+REVISION = `#{GIT} log --pretty=format:'' | wc -l`.scan(/\d/)
+
+puts "#{REVISION}"
 
 if File.file?(PLIST_FILE) and REVISION
-   `#{PLUTIL} -convert xml1 #{PLIST_FILE}`
-   
+  `#{PLUTIL} -convert xml1 #{PLIST_FILE}`
+  
   pl = Plist::parse_xml(PLIST_FILE)
   if pl
     pl["CFBundleVersion"] = REVISION.to_s
