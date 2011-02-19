@@ -18,7 +18,7 @@ end
 
 raise "Must be run from Xcode" unless ENV['XCODE_VERSION_ACTUAL']
 
-GIT = "/opt/local/bin/git"
+GIT = system('which git')
 PRODUCT_PLIST = File.join(ENV['BUILT_PRODUCTS_DIR'], ENV['INFOPLIST_PATH'])
 REVISION = `#{GIT} log --pretty=format:'' | wc -l`.scan(/\d/).to_s
 BUNDLE_VERSION = "CFBundleVersion"
